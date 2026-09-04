@@ -353,8 +353,8 @@ function conectar() {
       sincronizarGrupoUi();
       if (state.noGrupo) await abrirInicioDireto();
       else await abrirGeral();
-      // O servidor manda o que ainda está vivo logo depois do ready; só
-      // processamos depois que a tela existe.
+      // O servidor manda o que ainda está vivo logo depois do ready.
+      // Mensagens que chegaram durante o await acima ficaram na fila.
       const fila = state.fila.splice(0);
       for (const pendente of fila) await receber(pendente);
       return;
@@ -375,7 +375,9 @@ function conectar() {
           : m.reason;
       return aviso(motivo);
     }
-    if (m.type === "msg") return state.canal ? receber(m) : state.fila.push(m);
+    // Não depende de canal aberto: no início direto (só 1:1) canal fica
+    // null, mas o histórico e a barra lateral ainda precisam da reentrega.
+    if (m.type === "msg") return state.conectado ? receber(m) : state.fila.push(m);
 
     if (m.type === "queued") {
       const item = state.refs.get(m.ref);
