@@ -1,0 +1,17 @@
+# Sobreposição só para testes: expõe o Redis no host para que a suíte possa
+# verificar, do lado de fora, que o texto claro realmente não está lá.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+#
+# Nunca use isto em produção — no arquivo principal o Redis fica apenas na
+# rede interna, sem porta publicada.
+services:
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  # Piso baixo para que a suíte consiga ver uma mensagem expirar sozinha sem
+  # esperar meio minuto por asserção.
+  server:
+    environment:
+      MSG_TTL_MIN: "1s"

@@ -1,0 +1,31 @@
+# Publica o Sigilo por HTTPS com certificado real (Let's Encrypt, automático).
+#
+# Sem HTTPS o navegador não libera as funções de criptografia, e o Sigilo se
+# recusa a operar — então esta sobreposição não é enfeite: é o que torna o
+# acesso de outras pessoas possível.
+#
+#   SIGILO_DOMAIN=chat.suaempresa.com \
+#   docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+#
+# Requisitos: o domínio precisa apontar para este servidor, e as portas 80 e
+# 443 precisam estar alcançáveis para a validação do certificado.
+services:
+  caddy:
+    image: caddy:2-alpine
+    command: caddy reverse-proxy --from "${SIGILO_DOMAIN:?defina SIGILO_DOMAIN}" --to server:8090
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      - server
+    networks:
+      - sigilo
+
+  # Com o Caddy na frente, a porta do servidor não precisa ficar exposta.
+  server:
+    ports: !reset []
+
+volumes:
+  caddy-data:

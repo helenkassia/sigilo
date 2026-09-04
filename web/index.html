@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#2f705a">
+  <meta name="description" content="Conversas privadas, mensagens temporárias. Um espaço mais leve para se conectar.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Sigilo">
+  <title>Sigilo — conversas que ficam entre vocês</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-tela="entrar">
+  <header class="topo">
+    <div class="marca"><svg class="logo" aria-hidden="true"><use href="icons.svg#brand"/></svg><span>sigilo<span class="marca-ponto">.</span></span></div>
+    <div class="topo-direita"><span class="topo-nota">Um espaço mais reservado.</span><span id="status" data-tipo="neutro" role="status">Pronto para entrar</span></div>
+  </header>
+  <div id="aviso" role="alert" hidden><svg class="icon" aria-hidden="true"><use href="icons.svg#info"/></svg><span id="aviso-texto"></span><button id="btn-fechar-aviso" type="button" class="botao-icone" aria-label="Fechar aviso"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div>
+  <main data-tela="entrar" class="entrada">
+    <section class="boas-vindas" aria-labelledby="boas-vindas-titulo">
+      <span class="etiqueta"><svg class="icon" aria-hidden="true"><use href="icons.svg#lock"/></svg> Privacidade, por padrão</span>
+      <h1 id="boas-vindas-titulo">Boas conversas.<br>Menos <em>rastros.</em></h1>
+      <p class="entrada-descricao">Um lugar para trocar ideias, mandar um áudio e estar perto. Com mensagens que têm hora para ir embora.</p>
+      <div class="entrada-beneficios">
+        <div><span class="beneficio-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg></span><span><strong>Só entre os participantes</strong><small>Criptografia ponta a ponta em cada mensagem.</small></span></div>
+        <div><span class="beneficio-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#clock"/></svg></span><span><strong>O tempo é uma escolha sua</strong><small>Defina quando o conteúdo sai da conversa.</small></span></div>
+        <div><span class="beneficio-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#mic"/></svg></span><span><strong>Escreva. Grave. Anexe.</strong><small>Texto, áudio, imagem e PDF com a mesma proteção.</small></span></div>
+      </div>
+      <p class="entrada-rodape">Mais presença. Menos histórico.</p>
+    </section>
+    <section class="entrada-acesso">
+      <form id="form-entrar" class="cartao">
+        <span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#chat"/></svg></span>
+        <h2>Seu espaço começa aqui</h2><p class="nota">Escolha como as pessoas vão encontrar você.</p>
+        <label for="campo-eu">Seu nome ou apelido</label>
+        <input id="campo-eu" placeholder="Ex.: ana.silva" autocomplete="off" spellcheck="false" minlength="2" required aria-describedby="previa-id identidade-nota">
+        <p class="previa" id="previa-id" hidden></p>
+        <div id="rotacao" hidden><label for="campo-rotacao">Token de rotação</label><input id="campo-rotacao" placeholder="Recebido por outro canal" autocomplete="off"></div>
+        <button type="submit" class="primario">Entrar no Sigilo <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"/></svg></button>
+        <p class="acesso-nota" id="identidade-nota"><svg class="icon" aria-hidden="true"><use href="icons.svg#device"/></svg><span>Sua identidade fica neste navegador.<br>Outro dispositivo terá uma chave diferente.</span></p>
+      </form>
+      <p class="acesso-rodape">Sem senha para lembrar. Sua chave é o seu acesso.</p>
+    </section>
+  </main>
+  <main data-tela="conversa" id="app" data-nav="closed" data-info="closed" hidden>
+    <aside class="lateral" aria-label="Suas conversas">
+      <div class="lateral-cabecalho"><h2>Conversas</h2><div class="acoes-lateral"><button id="btn-nova" class="botao-icone" type="button" aria-label="Nova conversa" title="Nova conversa"><svg class="icon" aria-hidden="true"><use href="icons.svg#compose"/></svg></button><button id="btn-fechar-nav" class="botao-icone so-mobile" type="button" aria-label="Voltar à conversa"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div></div>
+      <button class="nova-conversa" id="btn-nova-grande" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#plus"/></svg> Nova conversa</button>
+      <div class="lista-lateral">
+        <p class="secao-rotulo">Seu espaço em grupo</p>
+        <button id="btn-geral" class="canal" aria-current="true">
+          <span class="avatar avatar-grupo"><svg class="icon" aria-hidden="true"><use href="icons.svg#people"/></svg></span>
+          <span class="canal-info"><strong>Sala geral</strong><span id="contagem">Todos os participantes</span></span>
+          <span class="nao-lidas" id="nao-lidas-geral" hidden></span>
+        </button>
+        <section id="painel-conversas"><p class="secao-rotulo">Só entre vocês</p><ul id="conversas"></ul><p class="conversas-vazias" id="conversas-vazias">Suas conversas diretas<br>aparecem por aqui.</p></section>
+      </div>
+      <button id="btn-privacidade" type="button" class="lembrete"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg><span><strong>Privacidade faz parte.</strong><small>Entenda o que o Sigilo protege.</small></span><svg class="icon seta-pequena" aria-hidden="true"><use href="icons.svg#chevron"/></svg></button>
+      <details class="identidade">
+        <summary><span class="avatar avatar-eu" id="eu-avatar" aria-hidden="true">EU</span><span><strong id="eu-nome"></strong><small>Sua identidade neste navegador</small></span><svg class="icon" aria-hidden="true"><use href="icons.svg#chevron"/></svg></summary>
+        <div class="identidade-detalhes"><p class="rotulo">Sua impressão digital</p><p class="fp" id="minha-fp"></p><p class="nota mini">Compare estes números por outro canal para confirmar sua identidade.</p>
+          <label class="alternador push-opt" id="push-opt" hidden><input type="checkbox" id="campo-push"><span class="alternador-trilho" aria-hidden="true"></span><span>Avisar no celular</span></label>
+          <button id="btn-testar-push" type="button" class="discreto" hidden>Testar aviso agora</button>
+          <p class="nota mini" id="push-nota" hidden>Notificação genérica. Quem envia não recebe o próprio aviso — use outra janela. No Mac, libere o Chrome em Ajustes → Notificações.</p>
+          <button id="sair" type="button" class="discreto">Sair desta identidade</button></div>
+      </details>
+    </aside>
+    <section class="painel" aria-label="Conversa atual">
+      <header class="cabecalho-canal">
+        <button id="btn-menu" type="button" class="botao-icone so-mobile" aria-label="Abrir conversas" aria-controls="app" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="icons.svg#back"/></svg></button>
+        <span class="avatar avatar-cabecalho" id="canal-avatar" aria-hidden="true"><svg class="icon"><use href="icons.svg#people"/></svg></span>
+        <div class="titulo-conversa"><h1 id="titulo-canal">Sala geral</h1><p id="sub-canal">Todos os participantes</p></div>
+        <div class="cabecalho-acoes"><button id="btn-seguranca" class="botao-icone" type="button" aria-label="Privacidade desta conversa" title="Privacidade desta conversa"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg></button><button id="btn-pessoas" type="button" class="botao-pessoas" aria-label="Pessoas na sala" aria-controls="painel-elenco" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="icons.svg#people"/></svg><span>Pessoas</span><span id="pessoas-alerta" class="ponto-alerta" hidden></span></button></div>
+      </header>
+      <div id="alerta-chaves" class="alerta-chaves" hidden><svg class="icon" aria-hidden="true"><use href="icons.svg#info"/></svg><span id="alerta-chaves-texto"></span><button id="btn-revisar-chaves" type="button">Conferir</button></div>
+      <aside id="faixa-sigilo" class="faixa-sigilo" aria-label="Lembrete de sigilo">
+        <svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg>
+        <p>Capturas, gravação de tela e salvar arquivos saem do Sigilo. Prefira não registrar o que aparece aqui. <button type="button" id="btn-faixa-sobre" class="link-faixa">Saiba mais</button></p>
+      </aside>
+      <ul id="linha" aria-label="Mensagens"></ul>
+      <form id="form-msg" hidden>
+        <div class="opcoes">
+          <label class="ttl" title="Prazo de expiração"><svg class="icon" aria-hidden="true"><use href="icons.svg#clock"/></svg><span>Desaparece em</span><select id="campo-ttl" aria-label="Prazo da mensagem"></select></label>
+          <label class="alternador"><input type="checkbox" id="campo-queimar"><span class="alternador-trilho" aria-hidden="true"></span><span>Apagar após abrir</span></label>
+          <span class="explica" id="explica-envio"></span>
+        </div>
+        <div id="voz" hidden>
+          <div class="voz-cabecalho"><span class="gravacao-sinal" aria-hidden="true"></span><span id="voz-status" role="status" aria-live="polite"></span></div>
+          <audio id="voz-previa" controls preload="metadata" hidden aria-label="Ouvir gravação antes de enviar"></audio>
+          <div class="voz-acoes"><button type="button" id="btn-descartar" class="discreto">Descartar</button><button type="button" id="btn-parar" class="secundario" hidden><svg class="icon" aria-hidden="true"><use href="icons.svg#stop"/></svg> Parar gravação</button><button type="button" id="btn-enviar-voz" class="primario" hidden>Enviar áudio <svg class="icon" aria-hidden="true"><use href="icons.svg#send"/></svg></button></div>
+          <p class="nota mini">Até 2 minutos / 512 KiB. Você pode ouvir antes de enviar.</p>
+        </div>
+        <div id="anexo" hidden>
+          <div class="anexo-cabecalho"><svg class="icon" aria-hidden="true"><use href="icons.svg#paperclip"/></svg><span id="anexo-status" role="status" aria-live="polite"></span></div>
+          <div class="anexo-previa">
+            <img id="anexo-img" alt="" hidden>
+            <div id="anexo-pdf" class="anexo-pdf" hidden><strong id="anexo-nome"></strong><span id="anexo-tamanho"></span></div>
+          </div>
+          <div class="anexo-acoes"><button type="button" id="btn-descartar-anexo" class="discreto">Descartar</button><button type="button" id="btn-enviar-anexo" class="primario">Enviar arquivo <svg class="icon" aria-hidden="true"><use href="icons.svg#send"/></svg></button></div>
+          <p class="nota mini">Imagem ou PDF · até 4 MiB. Colar (Ctrl/Cmd+V) e arrastar também funcionam. Cifrado no navegador.</p>
+        </div>
+        <div class="linha-campo">
+          <textarea id="campo-msg" rows="1" placeholder="Escreva uma mensagem…" aria-label="Mensagem" autocomplete="off"></textarea>
+          <input type="file" id="campo-arquivo" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.jpg,.jpeg,.png,.webp,.gif,.pdf" hidden>
+          <button type="button" id="btn-anexar" class="botao-icone" aria-label="Anexar imagem ou PDF" title="Anexar imagem ou PDF · até 4 MiB"><svg class="icon" aria-hidden="true"><use href="icons.svg#paperclip"/></svg></button>
+          <button type="button" id="btn-gravar" class="botao-icone" aria-label="Gravar áudio" title="Gravar áudio · até 2 minutos"><svg class="icon" aria-hidden="true"><use href="icons.svg#mic"/></svg></button>
+          <button type="submit" id="btn-enviar-texto" class="enviar" aria-label="Enviar mensagem" title="Enviar mensagem"><svg class="icon" aria-hidden="true"><use href="icons.svg#send"/></svg></button>
+        </div>
+        <div class="compositor-rodape"><span><svg class="icon" aria-hidden="true"><use href="icons.svg#lock"/></svg> Protegida de ponta a ponta</span><span class="atalho">Enter para enviar <span>·</span> Shift + Enter para uma nova linha</span></div>
+      </form>
+    </section>
+    <aside class="elenco" id="painel-elenco" aria-label="Participantes da sala" hidden>
+      <div class="elenco-cabecalho"><h2>Pessoas na sala</h2><button id="btn-fechar-pessoas" type="button" class="botao-icone" aria-label="Fechar participantes"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div>
+      <p class="nota">A sala geral é compartilhada com todas as identidades registradas.</p>
+      <p id="alerta-elenco" hidden></p><ul id="elenco"></ul>
+      <button id="btn-recarregar" type="button" class="secundario"><svg class="icon" aria-hidden="true"><use href="icons.svg#refresh"/></svg> Atualizar pessoas</button>
+      <div class="elenco-nota"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg><p>Toque em uma pessoa para conferir a impressão digital por outro canal. Fixar uma chave não é verificar uma identidade.</p></div>
+    </aside>
+  </main>
+  <dialog id="nova-conversa" class="dialogo" aria-labelledby="nova-titulo" hidden>
+    <div class="dialogo-topo"><span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#compose"/></svg></span><button id="btn-fechar-nova" type="button" class="botao-icone" aria-label="Fechar nova conversa"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div>
+    <h2 id="nova-titulo">Uma conversa só de vocês</h2><p class="nota">Encontre uma pessoa pelo identificador que ela usa no Sigilo.</p>
+    <form id="form-par"><label for="campo-par">Identificador do contato</label><input id="campo-par" placeholder="Ex.: ana.silva" autocomplete="off" spellcheck="false" required><button type="submit" class="primario">Continuar <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"/></svg></button><p id="erro-contato" class="erro-campo" role="alert" hidden></p></form>
+    <p class="dialogo-rodape"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg> No primeiro contato, confira a identidade antes de conversar.</p>
+  </dialog>
+  <dialog id="sobre" class="dialogo sobre-cartao" aria-labelledby="sobre-titulo" hidden>
+    <span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg></span>
+    <h2 id="sobre-titulo">Privacidade, com transparência</h2><p class="nota">O que acontece aqui — e quais são os limites.</p>
+    <h3>Protegido desde o envio</h3><ul class="lista boa"><li>Texto, áudio, imagens e PDF são cifrados no seu navegador. O servidor recebe conteúdo cifrado, não a conversa em claro.</li><li>As mensagens têm prazo e o servidor usa armazenamento temporário, sem persistência configurada.</li><li>Quem entra na sala depois não recebe mensagens anteriores.</li></ul>
+    <h3>Vale ter em mente</h3><ul class="lista ruim"><li>Captura de tela, gravação da tela, impressão e “salvar como” tiram o conteúdo do Sigilo. O navegador não consegue impedir isso de verdade — o que fazemos é lembrar e reduzir acidentes.</li><li>Quem recebe pode copiar texto, gravar áudio ou salvar uma cópia da imagem/PDF. Apagar daqui não apaga cópias feitas por outra pessoa.</li><li>Um dispositivo comprometido ou código web adulterado pode acessar o conteúdo. A criptografia não protege esses casos.</li><li>Na sala geral, todos os membros recebem uma cópia. Assuntos restritos devem ficar em conversas diretas.</li><li>A aplicação não salva o conteúdo no navegador, mas não controla todos os buffers, o disco ou a memória do sistema operacional.</li></ul>
+    <div class="sobre-tempo"><svg class="icon" aria-hidden="true"><use href="icons.svg#clock"/></svg><p><strong>Sobre “Apagar após abrir”</strong><br>Texto e imagem são considerados lidos com a conversa visível. No áudio e no PDF, a confirmação só acontece ao começar a ouvir ou ao abrir o documento. A cópia local fica até sair da conversa; o prazo original continua valendo.</p></div>
+    <p class="rodape-sobre">Compare a impressão digital por outro canal. Essa conferência confirma a identidade de quem está do outro lado. O protocolo atual não oferece sigilo futuro (forward secrecy).</p><button id="sobre-ok" type="button" class="primario">Entendi</button>
+  </dialog>
+  <div id="inseguro" role="alertdialog" aria-modal="true" aria-labelledby="inseguro-titulo" hidden><div class="trava-cartao"><span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg></span><h2 id="inseguro-titulo">Precisamos de uma conexão segura</h2><p>Para proteger suas conversas, abra o Sigilo por <strong>HTTPS</strong> ou em <strong>localhost</strong>. Neste endereço, a criptografia não está disponível.</p><p class="nota">Peça à administração o endereço seguro da organização.</p></div></div>
+  <dialog id="trava" class="dialogo trava-cartao" aria-labelledby="trava-titulo" aria-describedby="trava-texto" hidden><span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#fingerprint"/></svg></span><h2 id="trava-titulo"></h2><p id="trava-texto"></p><p class="rotulo">Impressão digital do contato</p><p class="fp grande" id="trava-fp"></p><button id="trava-ok" type="button" class="primario">Os números conferem. Continuar</button><button id="trava-nao" type="button" class="discreto">Agora não</button></dialog>
+  <dialog id="lightbox" class="dialogo lightbox" aria-label="Visualização ampliada" hidden>
+    <div class="lightbox-topo"><button id="btn-fechar-lightbox" type="button" class="botao-icone" aria-label="Fechar visualização"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div>
+    <img id="lightbox-img" alt="">
+  </dialog>
+  <div id="overlay-sigilo" class="overlay-sigilo" hidden aria-hidden="true">
+    <div class="overlay-sigilo-cartao">
+      <svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg>
+      <p><strong>Conversa oculta</strong></p>
+      <p>Ao sair da aba ou da janela, o conteúdo some da tela para reduzir o risco de captura ou gravação acidental. Volte o foco para continuar.</p>
+    </div>
+  </div>
+  <button id="btn-queimar-sessao" type="button" class="fab-queima" hidden data-tooltip="Atalho: Esc Esc Esc" aria-label="Limpar sessão agora. Atalho: Esc Esc Esc">
+    <span class="fab-queima-icone" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 10v5m0 3.5v.5"/></svg>
+    </span>
+    <span class="fab-queima-texto">
+      <strong>Limpar agora</strong>
+      <small>Apaga a sessão</small>
+    </span>
+  </button>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

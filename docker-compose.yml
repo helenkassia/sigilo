@@ -1,0 +1,65 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD:?defina REDIS_PASSWORD}"]
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    # Sem volume de dados. O diretório de trabalho do Redis é um tmpfs:
+    # se algum caminho de código tentar escrever, escreve em RAM e morre
+    # junto com o container.
+    tmpfs:
+      - /data:size=64m,mode=0700,uid=999,gid=999
+    working_dir: /data
+    # Roda direto como o usuário redis: sem isso o entrypoint tenta um chown
+    # em /data, que falha (e deve falhar) com todas as capabilities dropadas.
+    user: "999:999"
+    # Sem swap: a memória do Redis não pode vazar para o disco do host.
+    mem_limit: 320m
+    memswap_limit: 320m
+    ulimits:
+      # Sem core dump: um crash não pode virar um despejo do conteúdo.
+      core: 0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    networks:
+      - sigilo
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--no-auth-warning", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379"
+      PORT: "8090"
+      ROTATION_TOKEN: "${ROTATION_TOKEN:?defina ROTATION_TOKEN}"
+      MSG_TTL: "${MSG_TTL:-1d}"
+      MSG_TTL_MIN: "${MSG_TTL_MIN:-30s}"
+      MSG_TTL_MAX: "${MSG_TTL_MAX:-7d}"
+      TTL_OPTIONS: "${TTL_OPTIONS:-5m,1h,8h,1d,3d,7d}"
+      MAX_ENVELOPE_BYTES: "${MAX_ENVELOPE_BYTES:-5242880}"
+      VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
+      VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
+      VAPID_SUBJECT: "${VAPID_SUBJECT:-mailto:admin@localhost}"
+    ports:
+      - "8090:8090"
+    depends_on:
+      redis:
+        condition: service_healthy
+    ulimits:
+      core: 0
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - sigilo
+
+networks:
+  sigilo:
+    driver: bridge
