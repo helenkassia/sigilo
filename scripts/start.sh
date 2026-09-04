@@ -2,6 +2,15 @@
 # Sobe Redis local (se necessário) e o relay do Sigilo no mesmo container.
 set -eu
 
+faltando=""
+[ -n "${ROTATION_TOKEN:-}" ] || faltando="$faltando ROTATION_TOKEN"
+[ -n "${GROUP_TOKEN:-}" ] || faltando="$faltando GROUP_TOKEN"
+if [ -n "$faltando" ]; then
+  echo "Sigilo: variáveis obrigatórias ausentes:$faltando" >&2
+  echo "Defina-as no painel (Railway → Variables) e faça um novo deploy." >&2
+  exit 1
+fi
+
 iniciar_redis_local() {
   mkdir -p /tmp/redis
   redis-server /app/redis.embed.conf --daemonize yes
