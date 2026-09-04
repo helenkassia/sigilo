@@ -1096,14 +1096,19 @@ function confirmarLeituras(canal) {
   for (const id of pendentes) state.ws.send(JSON.stringify({ type: "read", id }));
 }
 
-// Voltar para a aba conta como olhar: o que estava à espera é confirmado.
+// Voltar para a aba (ou focar a janela) conta como olhar.
+function aoOlharDeNovo() {
+  if (state.canal) retomarConversa();
+}
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") {
     if (["requesting", "recording", "stopping"].includes(voz.phase)) gravador.cancelar();
     for (const player of document.querySelectorAll("audio")) player.pause();
+    return;
   }
-  if (state.canal) confirmarLeituras(chaveCanal(state.canal));
+  aoOlharDeNovo();
 });
+window.addEventListener("focus", aoOlharDeNovo);
 
 function liberarMensagem(msg) {
   liberarPlayer(msg.player);
@@ -1253,6 +1258,21 @@ function marcarNaoLida(canal) {
   pintarConversas();
 }
 
+const TITULO = "Sigilo — conversas que ficam entre vocês";
+
+function totalNaoLidas() {
+  let total = 0;
+  for (const n of state.naoLidas.values()) total += n;
+  return total;
+}
+
+function atualizarTitulo() {
+  const total = totalNaoLidas();
+  document.title = total > 0
+    ? `(${total}) ${total === 1 ? "nova mensagem" : "novas mensagens"} — Sigilo`
+    : TITULO;
+}
+
 function pintarConversas() {
   const aberto = state.canal ? chaveCanal(state.canal) : null;
 
@@ -1296,6 +1316,8 @@ function pintarConversas() {
     li.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && abrir());
     ul.append(li);
   }
+
+  atualizarTitulo();
 }
 
 const horario = (ms) =>

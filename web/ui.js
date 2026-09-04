@@ -5,7 +5,10 @@ export function iniciais(nome) {
   return (partes.length > 1 ? partes[0][0] + partes.at(-1)[0] : nome.slice(0, 2)).toUpperCase();
 }
 export function conversaVisivel() {
+  // hasFocus: duas janelas lado a lado ficam ambas "visible"; só a
+  // focada conta como olhando a conversa (título, não-lidas, leituras).
   return document.visibilityState === "visible" &&
+    document.hasFocus() &&
     !!document.querySelector(".painel")?.getClientRects().length &&
     !document.querySelector("dialog[open]");
 }

@@ -62,10 +62,10 @@ export async function testarAvisoLocal() {
   }
 }
 
-/** Aviso local quando a aba está em segundo plano e chega mensagem pelo WS. */
+/** Aviso local quando a aba não está em foco e chega mensagem pelo WS. */
 export async function avisarLocalSeOculto() {
   if (Notification.permission !== "granted") return;
-  if (!document.hidden && document.visibilityState === "visible") return;
+  if (document.visibilityState === "visible" && document.hasFocus()) return;
   try {
     new Notification("Sigilo", {
       body: "Nova mensagem",
