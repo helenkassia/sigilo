@@ -582,18 +582,40 @@ async function abrirGeral() {
 
 $("#btn-geral").addEventListener("click", abrirGeral);
 $("#btn-recarregar").addEventListener("click", carregarElenco);
-$("#btn-entrar-grupo").addEventListener("click", async () => {
-  const codigo = window.prompt("Código do grupo para entrar na sala geral:");
-  if (codigo == null) return;
-  groupToken = codigo.trim();
-  if (!groupToken) return aviso(MOTIVOS.invalid_group_token);
+$("#btn-entrar-grupo").addEventListener("click", () => {
+  $("#erro-grupo").hidden = true;
+  $("#campo-grupo-dialogo").value = groupToken || "";
+  abrirDialogo("entrar-grupo");
+  $("#campo-grupo-dialogo").focus();
+});
+$("#btn-fechar-grupo").addEventListener("click", () => fecharDialogo("entrar-grupo"));
+$("#form-grupo").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const codigo = $("#campo-grupo-dialogo").value.trim();
+  const erro = $("#erro-grupo");
+  if (!codigo) {
+    erro.hidden = false;
+    erro.textContent = MOTIVOS.invalid_group_token;
+    return;
+  }
+  groupToken = codigo;
   try { sessionStorage.setItem("sigilo.grupo", groupToken); } catch {}
   $("#campo-grupo").value = groupToken;
   if (!state.identity) return;
-  await realmenteEntrar(state.identity.userId);
-  if (!state.noGrupo) {
+  const botao = $("#form-grupo button[type=submit]");
+  botao.disabled = true;
+  try {
+    await realmenteEntrar(state.identity.userId);
+    if (state.noGrupo) {
+      erro.hidden = false;
+      erro.textContent = MOTIVOS.invalid_group_token;
+      return;
+    }
+    fecharDialogo("entrar-grupo");
     aviso("Você entrou na sala geral.");
     await abrirGeral();
+  } finally {
+    botao.disabled = false;
   }
 });
 
