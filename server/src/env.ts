@@ -24,6 +24,12 @@ export const env = {
   rotationToken: req("ROTATION_TOKEN"),
 
   /**
+   * Código do grupo: só quem o tem consegue criar identidade e entrar no
+   * canal geral. Entregue fora de banda — o link público sozinho não basta.
+   */
+  groupToken: req("GROUP_TOKEN"),
+
+  /**
    * Vida da mensagem, contada da CRIAÇÃO. Um relógio só: ler não destrói,
    * não ler não prolonga. A mensagem existe pelo tempo que o remetente
    * escolheu e some quando ele acaba, tenha sido lida ou não.

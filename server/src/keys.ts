@@ -21,8 +21,13 @@ export async function get(userId: string): Promise<Identity | null> {
   return raw ? (JSON.parse(raw) as Identity) : null;
 }
 
+/** Remove uma identidade recém-criada que não passou no portão do grupo. */
+export async function apagar(userId: string): Promise<void> {
+  await redis.del(key(userId));
+}
+
 export type RegisterResult =
-  | { ok: true; identity: Identity; rotated: boolean }
+  | { ok: true; identity: Identity; rotated: boolean; created: boolean }
   | { ok: false; reason: "key_change_requires_approval"; current: Identity };
 
 /**
@@ -45,11 +50,10 @@ export async function register(
     const same =
       JSON.stringify(current.ecdh) === JSON.stringify(id.ecdh) &&
       JSON.stringify(current.ecdsa) === JSON.stringify(id.ecdsa);
-    if (same) return { ok: true, identity: current, rotated: false };
+    if (same) return { ok: true, identity: current, rotated: false, created: false };
 
     const approved =
       rotationToken !== null &&
-      rotationToken.length === expectedToken.length &&
       timingSafeEqualStr(rotationToken, expectedToken);
     if (!approved) {
       return { ok: false, reason: "key_change_requires_approval", current };
@@ -61,18 +65,25 @@ export async function register(
       version: current.version + 1,
     };
     await redis.set(key(id.userId), JSON.stringify(next));
-    return { ok: true, identity: next, rotated: true };
+    return { ok: true, identity: next, rotated: true, created: false };
   }
 
   const fresh: Identity = { ...id, firstSeen: Date.now(), version: 1 };
   await redis.set(key(id.userId), JSON.stringify(fresh));
-  return { ok: true, identity: fresh, rotated: false };
+  return { ok: true, identity: fresh, rotated: false, created: true };
 }
 
 function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
+}
+
+/** Compara o código do grupo sem vazar o tamanho por tempo óbvio demais. */
+export function tokenConfere(oferecido: string | null, esperado: string): boolean {
+  if (oferecido == null) return false;
+  return timingSafeEqualStr(oferecido, esperado);
 }
 
 /** Verifica a assinatura do desafio de conexão com a chave ECDSA registrada. */

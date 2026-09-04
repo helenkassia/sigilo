@@ -8,6 +8,8 @@ const BASE = process.env.BASE ?? "http://127.0.0.1:8090";
 const REDIS = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
 const ROT = process.env.ROTATION_TOKEN;
 if (!ROT) throw new Error("Defina ROTATION_TOKEN para executar os testes de rotação.");
+const GROUP = process.env.GROUP_TOKEN;
+if (!GROUP) throw new Error("Defina GROUP_TOKEN para executar os testes de entrada no grupo.");
 const sub = crypto.subtle;
 const b64e = (b) => Buffer.from(b).toString("base64");
 const b64d = (s) => new Uint8Array(Buffer.from(s, "base64"));
@@ -71,7 +73,11 @@ async function open(me, remetente, envB64) {
 async function register(id, token) {
   const r = await fetch(`${BASE}/api/identity`, {
     method: "POST",
-    headers: { "content-type": "application/json", ...(token ? { "x-rotation-token": token } : {}) },
+    headers: {
+      "content-type": "application/json",
+      "x-group-token": GROUP,
+      ...(token ? { "x-rotation-token": token } : {}),
+    },
     body: JSON.stringify({ userId: id.userId, ecdh: id.ecdhPub, ecdsa: id.ecdsaPub }),
   });
   return { status: r.status, body: await r.json() };

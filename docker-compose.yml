@@ -40,6 +40,7 @@ services:
       REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379"
       PORT: "8090"
       ROTATION_TOKEN: "${ROTATION_TOKEN:?defina ROTATION_TOKEN}"
+      GROUP_TOKEN: "${GROUP_TOKEN:?defina GROUP_TOKEN}"
       MSG_TTL: "${MSG_TTL:-1d}"
       MSG_TTL_MIN: "${MSG_TTL_MIN:-30s}"
       MSG_TTL_MAX: "${MSG_TTL_MAX:-7d}"

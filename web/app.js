@@ -90,10 +90,23 @@ const MOTIVOS = {
     "Identificador inválido. Use ao menos 2 caracteres — letras sem acento, números, ponto, hífen ou sublinhado.",
   key_change_requires_approval:
     "Já existe uma chave registrada para este identificador. Ou alguém já o usou, ou este é um dispositivo novo — rotação exige token entregue fora de banda.",
+  invalid_group_token:
+    "Código do grupo inválido. Peça o código por outro canal a quem já está dentro.",
 };
 
 let rotationToken = null;
 $("#campo-rotacao").addEventListener("input", (e) => (rotationToken = e.target.value.trim() || null));
+
+let groupToken = "";
+try { groupToken = sessionStorage.getItem("sigilo.grupo") ?? ""; } catch {}
+if (groupToken) $("#campo-grupo").value = groupToken;
+$("#campo-grupo").addEventListener("input", (e) => {
+  groupToken = e.target.value.trim();
+  try {
+    if (groupToken) sessionStorage.setItem("sigilo.grupo", groupToken);
+    else sessionStorage.removeItem("sigilo.grupo");
+  } catch {}
+});
 
 $("#campo-eu").addEventListener("input", (e) => {
   const previa = normalizarId(e.target.value);
@@ -138,6 +151,7 @@ async function realmenteEntrar(userId) {
     headers: {
       "content-type": "application/json",
       ...(rotationToken ? { "x-rotation-token": rotationToken } : {}),
+      ...(groupToken ? { "x-group-token": groupToken } : {}),
     },
     body: JSON.stringify({ userId, ecdh: state.identity.ecdhPub, ecdsa: state.identity.ecdsaPub }),
   });
@@ -145,6 +159,10 @@ async function realmenteEntrar(userId) {
   if (res.status === 409) {
     $("#rotacao").hidden = false;
     return aviso(MOTIVOS.key_change_requires_approval);
+  }
+  if (res.status === 403) {
+    const { error } = await res.json().catch(() => ({}));
+    return aviso(MOTIVOS[error] ?? MOTIVOS.invalid_group_token);
   }
   if (!res.ok) {
     const { error } = await res.json().catch(() => ({}));
@@ -165,6 +183,9 @@ async function realmenteEntrar(userId) {
 
 $("#form-entrar").addEventListener("submit", (e) => {
   e.preventDefault();
+  groupToken = $("#campo-grupo").value.trim();
+  if (!groupToken) return aviso(MOTIVOS.invalid_group_token);
+  try { sessionStorage.setItem("sigilo.grupo", groupToken); } catch {}
   const userId = normalizarId($("#campo-eu").value);
   if (userId.length < 2) return aviso(MOTIVOS.invalid_user_id);
   entrar(userId);
@@ -182,6 +203,7 @@ $("#sair").addEventListener("click", async () => {
     try { await Push.desativarPush(state.identity); } catch {}
   }
   try { sessionStorage.removeItem("sigilo.eu"); } catch {}
+  try { sessionStorage.removeItem("sigilo.grupo"); } catch {}
   location.reload();
 });
 
@@ -218,6 +240,7 @@ async function limparSessao() {
     try { await Push.desativarPush(id); } catch {}
   }
   try { sessionStorage.removeItem("sigilo.eu"); } catch {}
+  try { sessionStorage.removeItem("sigilo.grupo"); } catch {}
   location.replace(location.pathname + location.search);
 }
 

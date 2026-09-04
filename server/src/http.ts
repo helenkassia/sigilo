@@ -92,7 +92,18 @@ export function createHttpServer() {
           // 409: existe uma identidade anterior e ela não bate.
           return json(res, 409, { error: result.reason, current: result.current });
         }
-        // Registrar-se é entrar no canal geral. Não há grupo a criar.
+        // Identidade nova só entra no grupo com o código compartilhado.
+        // Quem já tinha a mesma chave neste dispositivo volta sem o código.
+        if (result.created) {
+          const groupTok = (req.headers["x-group-token"] as string) ?? null;
+          if (!keys.tokenConfere(groupTok, env.groupToken)) {
+            // A chave acabou de ser gravada — remove para não deixar órfão
+            // sem ter passado pelo portão do grupo.
+            await keys.apagar(userId);
+            return json(res, 403, { error: "invalid_group_token" });
+          }
+        }
+        // Registrar-se é entrar no canal geral do grupo.
         await joinRoster(userId);
         // Quem já está conectado precisa saber, ou nunca verá esta pessoa.
         avisarElenco();
