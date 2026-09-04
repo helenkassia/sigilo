@@ -92,30 +92,30 @@ export function createHttpServer() {
           // 409: existe uma identidade anterior e ela não bate.
           return json(res, 409, { error: result.reason, current: result.current });
         }
-        // Identidade nova só entra no grupo com o código compartilhado.
-        // Quem já tinha a mesma chave neste dispositivo volta sem o código.
-        if (result.created) {
-          const groupTok = (req.headers["x-group-token"] as string) ?? null;
-          if (!keys.tokenConfere(groupTok, env.groupToken)) {
-            // A chave acabou de ser gravada — remove para não deixar órfão
-            // sem ter passado pelo portão do grupo.
-            await keys.apagar(userId);
-            return json(res, 403, { error: "invalid_group_token" });
-          }
+        // Código do grupo é opcional na entrada: sem ele, a pessoa registra
+        // identidade e pode falar 1:1. Com ele, entra também na sala geral.
+        const groupTok = (req.headers["x-group-token"] as string) ?? null;
+        const entrouNoGrupo = keys.tokenConfere(groupTok, env.groupToken);
+        if (entrouNoGrupo) {
+          await joinRoster(userId);
+          avisarElenco();
         }
-        // Registrar-se é entrar no canal geral do grupo.
-        await joinRoster(userId);
-        // Quem já está conectado precisa saber, ou nunca verá esta pessoa.
-        avisarElenco();
-        return json(res, 200, { identity: result.identity, rotated: result.rotated });
+        const noGrupo = !(await roster()).includes(userId);
+        return json(res, 200, {
+          identity: result.identity,
+          rotated: result.rotated,
+          noGrupo,
+        });
       }
 
-      // Elenco do canal geral, com as chaves públicas de cada membro: o
-      // cliente precisa delas para envelopar a chave da mensagem uma vez
-      // por pessoa. O servidor não participa dessa parte.
+      // Elenco do canal geral: só quem já está no grupo vê os membros.
       if (req.method === "GET" && url.pathname === "/api/canal") {
-        const membros = await roster();
-        const identities = (await Promise.all(membros.map(keys.get))).filter(Boolean);
+        const quem = String(req.headers["x-user-id"] ?? "").trim();
+        const membrosIds = await roster();
+        if (!quem || !membrosIds.includes(quem)) {
+          return json(res, 403, { error: "not_in_group" });
+        }
+        const identities = (await Promise.all(membrosIds.map(keys.get))).filter(Boolean);
         return json(res, 200, { canal: CANAL_GERAL, membros: identities });
       }
 

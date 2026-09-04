@@ -25,6 +25,8 @@ const state = {
   maxEnvelopeBytes: 64 * 1024,
   /** { tipo: "geral" | "dm", peer?: identidade verificada } */
   canal: null,
+  /** Sem código do grupo: 1:1 ok, sala geral fechada. */
+  noGrupo: true,
   membros: [],
   suspeitos: [],
   novos: [],
@@ -91,7 +93,9 @@ const MOTIVOS = {
   key_change_requires_approval:
     "Já existe uma chave registrada para este identificador. Ou alguém já o usou, ou este é um dispositivo novo — rotação exige token entregue fora de banda.",
   invalid_group_token:
-    "Código do grupo inválido. Peça o código por outro canal a quem já está dentro.",
+    "Código do grupo inválido. Peça o código por outro canal a quem já está na sala geral.",
+  not_in_group:
+    "Você ainda não está na sala geral. Informe o código do grupo para entrar.",
 };
 
 let rotationToken = null;
@@ -160,14 +164,14 @@ async function realmenteEntrar(userId) {
     $("#rotacao").hidden = false;
     return aviso(MOTIVOS.key_change_requires_approval);
   }
-  if (res.status === 403) {
-    const { error } = await res.json().catch(() => ({}));
-    return aviso(MOTIVOS[error] ?? MOTIVOS.invalid_group_token);
-  }
   if (!res.ok) {
     const { error } = await res.json().catch(() => ({}));
     return aviso(MOTIVOS[error] ?? `Falha ao registrar identidade (${error ?? res.status}).`);
   }
+
+  const body = await res.json().catch(() => ({}));
+  state.noGrupo = body.noGrupo === true;
+  if (groupToken && state.noGrupo) aviso(MOTIVOS.invalid_group_token);
 
   $("#minha-fp").textContent = await C.fingerprint(state.identity.ecdhPub, state.identity.ecdsaPub);
   $("#eu-nome").textContent = userId;
@@ -175,6 +179,7 @@ async function realmenteEntrar(userId) {
   // Lembra a identidade só enquanto esta aba viver: um F5 mantém você,
   // fechar a aba esquece. Nada disso vai para o disco.
   try { sessionStorage.setItem("sigilo.eu", userId); } catch {}
+  sincronizarGrupoUi();
   mostrar("conversa");
   status("Conectando…", "neutro");
   conectar();
@@ -184,8 +189,10 @@ async function realmenteEntrar(userId) {
 $("#form-entrar").addEventListener("submit", (e) => {
   e.preventDefault();
   groupToken = $("#campo-grupo").value.trim();
-  if (!groupToken) return aviso(MOTIVOS.invalid_group_token);
-  try { sessionStorage.setItem("sigilo.grupo", groupToken); } catch {}
+  try {
+    if (groupToken) sessionStorage.setItem("sigilo.grupo", groupToken);
+    else sessionStorage.removeItem("sigilo.grupo");
+  } catch {}
   const userId = normalizarId($("#campo-eu").value);
   if (userId.length < 2) return aviso(MOTIVOS.invalid_user_id);
   entrar(userId);
@@ -343,7 +350,9 @@ function conectar() {
       state.ttl = m.ttl;
       montarSeletorTtl(m.ttl);
       status("conectado", "ok");
-      await abrirGeral();
+      sincronizarGrupoUi();
+      if (state.noGrupo) await abrirInicioDireto();
+      else await abrirGeral();
       // O servidor manda o que ainda está vivo logo depois do ready; só
       // processamos depois que a tela existe.
       const fila = state.fila.splice(0);
@@ -353,10 +362,18 @@ function conectar() {
 
     if (m.type === "denied") return status(`recusado: ${m.reason}`, "erro");
     // Alguém entrou (ou trocou de chave): a lista na tela ficou velha.
-    if (m.type === "elenco") return void carregarElenco();
+    if (m.type === "elenco") {
+      if (!state.noGrupo) return void carregarElenco();
+      return;
+    }
     if (m.type === "error") {
       if (m.ref) removerMensagem(m.ref);
-      return aviso(m.reason === "envelope_too_large" ? "Mensagem recusada: excede o limite desta instalação." : m.reason);
+      const motivo = m.reason === "envelope_too_large"
+        ? "Mensagem recusada: excede o limite desta instalação."
+        : m.reason === "not_in_group"
+          ? MOTIVOS.not_in_group
+          : m.reason;
+      return aviso(motivo);
     }
     if (m.type === "msg") return state.canal ? receber(m) : state.fila.push(m);
 
@@ -419,8 +436,26 @@ function conectar() {
 
 // --- Canal geral -----------------------------------------------------------
 
+function sincronizarGrupoUi() {
+  const noGrupo = state.noGrupo === true;
+  $("#btn-geral").hidden = noGrupo;
+  $("#btn-entrar-grupo").hidden = !noGrupo;
+  if (noGrupo) {
+    $("#btn-pessoas").hidden = true;
+    $("#painel-elenco").hidden = true;
+  }
+}
+
 async function carregarElenco() {
-  const res = await fetch("/api/canal");
+  if (!state.identity || state.noGrupo) return;
+  const res = await fetch("/api/canal", {
+    headers: { "x-user-id": state.identity.userId },
+  });
+  if (res.status === 403) {
+    state.noGrupo = true;
+    sincronizarGrupoUi();
+    return;
+  }
   if (!res.ok) return aviso("Não foi possível carregar o canal.");
   const { membros } = await res.json();
 
@@ -493,7 +528,39 @@ async function pintarElenco() {
   ].filter(Boolean).join(" · ");
 }
 
+async function abrirInicioDireto() {
+  gravador.cancelar();
+  if (state.canal) enterrarQueimadas(chaveCanal(state.canal));
+  state.canal = null;
+  $("#titulo-canal").textContent = "Conversas diretas";
+  $("#sub-canal").textContent = "Comece uma conversa 1:1 pelo identificador";
+  $("#canal-avatar").innerHTML = icone("compose");
+  $("#btn-pessoas").hidden = true;
+  $("#painel-elenco").hidden = true;
+  $("#form-msg").hidden = true;
+  fecharNavegacao();
+  atualizarAlertaChaves();
+  const ul = $("#linha");
+  ul.textContent = "";
+  ul.append(vazioDireto());
+  pintarConversas();
+}
+
+function vazioDireto() {
+  const li = document.createElement("li");
+  li.className = "vazio";
+  li.innerHTML = `<div class="vazio-icone">${icone("compose")}</div><h2></h2><p></p><small></small>`;
+  li.querySelector("h2").textContent = "Só entre vocês.";
+  li.querySelector("p").textContent = "Use Nova conversa para falar com alguém pelo identificador. A sala geral fica disponível se você tiver o código do grupo.";
+  li.querySelector("small").textContent = "1:1 não depende da sala geral.";
+  return li;
+}
+
 async function abrirGeral() {
+  if (state.noGrupo) {
+    aviso(MOTIVOS.not_in_group);
+    return sincronizarGrupoUi();
+  }
   gravador.cancelar();
   await carregarElenco();
   if (state.canal) enterrarQueimadas(chaveCanal(state.canal));
@@ -515,6 +582,20 @@ async function abrirGeral() {
 
 $("#btn-geral").addEventListener("click", abrirGeral);
 $("#btn-recarregar").addEventListener("click", carregarElenco);
+$("#btn-entrar-grupo").addEventListener("click", async () => {
+  const codigo = window.prompt("Código do grupo para entrar na sala geral:");
+  if (codigo == null) return;
+  groupToken = codigo.trim();
+  if (!groupToken) return aviso(MOTIVOS.invalid_group_token);
+  try { sessionStorage.setItem("sigilo.grupo", groupToken); } catch {}
+  $("#campo-grupo").value = groupToken;
+  if (!state.identity) return;
+  await realmenteEntrar(state.identity.userId);
+  if (!state.noGrupo) {
+    aviso("Você entrou na sala geral.");
+    await abrirGeral();
+  }
+});
 
 // --- Conversa 1:1 ----------------------------------------------------------
 

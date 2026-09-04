@@ -181,12 +181,19 @@ async function enviar(conn: Conn, msg: any) {
   // O fan-out é do SERVIDOR, mas as chaves já vieram prontas do cliente: o
   // servidor continua sem conseguir abrir coisa alguma.
   const elenco = new Set(await roster());
+  if (to === CANAL_GERAL && !elenco.has(from)) {
+    return send(conn.ws, { type: "error", ref, reason: "not_in_group" });
+  }
   const pedidos: string[] =
     Array.isArray(msg.para) && msg.para.length > 0
       ? msg.para.map(String)
       : to === CANAL_GERAL ? [...elenco] : [to, from];
 
-  const alvos = [...new Set(pedidos)].filter((u) => elenco.has(u));
+  // Sala geral: só membros do elenco. DM: destinatários do envelope,
+  // mesmo quem nunca entrou no grupo.
+  const alvos = [...new Set(pedidos)].filter((u) =>
+    to === CANAL_GERAL ? elenco.has(u) : true,
+  );
   if (alvos.length === 0) return send(conn.ws, { type: "error", ref, reason: "sem_destinatarios" });
 
   const envio: Envio = {

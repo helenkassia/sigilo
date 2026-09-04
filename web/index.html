@@ -37,17 +37,17 @@
     <section class="entrada-acesso">
       <form id="form-entrar" class="cartao">
         <span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#chat"/></svg></span>
-        <h2>Seu espaço começa aqui</h2><p class="nota">Entre com o código do grupo. Sem ele, a sala não abre.</p>
-        <label for="campo-grupo">Código do grupo</label>
-        <input id="campo-grupo" type="password" placeholder="Recebido por outro canal" autocomplete="off" spellcheck="false" required>
+        <h2>Seu espaço começa aqui</h2><p class="nota">Escolha como as pessoas vão encontrar você. O código do grupo é só para a sala geral.</p>
         <label for="campo-eu">Seu nome ou apelido</label>
         <input id="campo-eu" placeholder="Ex.: ana.silva" autocomplete="off" spellcheck="false" minlength="2" required aria-describedby="previa-id identidade-nota">
         <p class="previa" id="previa-id" hidden></p>
+        <label for="campo-grupo">Código do grupo <span class="opcional">(opcional)</span></label>
+        <input id="campo-grupo" type="password" placeholder="Só se for entrar na sala geral" autocomplete="off" spellcheck="false">
         <div id="rotacao" hidden><label for="campo-rotacao">Token de rotação</label><input id="campo-rotacao" placeholder="Recebido por outro canal" autocomplete="off"></div>
         <button type="submit" class="primario">Entrar no Sigilo <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"/></svg></button>
-        <p class="acesso-nota" id="identidade-nota"><svg class="icon" aria-hidden="true"><use href="icons.svg#lock"/></svg><span>O código define quem faz parte da sala geral.<br>Sua identidade criptográfica fica neste navegador.</span></p>
+        <p class="acesso-nota" id="identidade-nota"><svg class="icon" aria-hidden="true"><use href="icons.svg#lock"/></svg><span>Sem código: conversas diretas 1:1.<br>Com código: você também entra na sala geral.</span></p>
       </form>
-      <p class="acesso-rodape">Grupo fechado. O link sozinho não libera a entrada.</p>
+      <p class="acesso-rodape">A sala geral é fechada. O 1:1 não depende dela.</p>
     </section>
   </main>
   <main data-tela="conversa" id="app" data-nav="closed" data-info="closed" hidden>
@@ -55,12 +55,18 @@
       <div class="lateral-cabecalho"><h2>Conversas</h2><div class="acoes-lateral"><button id="btn-nova" class="botao-icone" type="button" aria-label="Nova conversa" title="Nova conversa"><svg class="icon" aria-hidden="true"><use href="icons.svg#compose"/></svg></button><button id="btn-fechar-nav" class="botao-icone so-mobile" type="button" aria-label="Voltar à conversa"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div></div>
       <button class="nova-conversa" id="btn-nova-grande" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#plus"/></svg> Nova conversa</button>
       <div class="lista-lateral">
-        <p class="secao-rotulo">Grupo</p>
-        <button id="btn-geral" class="canal" aria-current="true">
-          <span class="avatar avatar-grupo"><svg class="icon" aria-hidden="true"><use href="icons.svg#people"/></svg></span>
-          <span class="canal-info"><strong>Sala geral</strong><span id="contagem">Todos os participantes</span></span>
-          <span class="nao-lidas" id="nao-lidas-geral" hidden></span>
-        </button>
+        <div id="bloco-grupo">
+          <p class="secao-rotulo">Grupo</p>
+          <button id="btn-geral" class="canal" aria-current="true" hidden>
+            <span class="avatar avatar-grupo"><svg class="icon" aria-hidden="true"><use href="icons.svg#people"/></svg></span>
+            <span class="canal-info"><strong>Sala geral</strong><span id="contagem">Todos os participantes</span></span>
+            <span class="nao-lidas" id="nao-lidas-geral" hidden></span>
+          </button>
+          <button id="btn-entrar-grupo" type="button" class="canal canal-entrar" hidden>
+            <span class="avatar avatar-grupo"><svg class="icon" aria-hidden="true"><use href="icons.svg#lock"/></svg></span>
+            <span class="canal-info"><strong>Entrar na sala geral</strong><span>Informe o código do grupo</span></span>
+          </button>
+        </div>
         <section id="painel-conversas"><p class="secao-rotulo">Só entre vocês</p><ul id="conversas"></ul><p class="conversas-vazias" id="conversas-vazias">Suas conversas diretas<br>aparecem por aqui.</p></section>
       </div>
       <button id="btn-privacidade" type="button" class="lembrete"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg><span><strong>Privacidade faz parte.</strong><small>Entenda o que o Sigilo protege.</small></span><svg class="icon seta-pequena" aria-hidden="true"><use href="icons.svg#chevron"/></svg></button>
