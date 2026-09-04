@@ -146,6 +146,18 @@
     <p class="rodape-sobre">Compare a impressão digital por outro canal. Essa conferência confirma a identidade de quem está do outro lado. O protocolo atual não oferece sigilo futuro (forward secrecy).</p><button id="sobre-ok" type="button" class="primario">Entendi</button>
   </dialog>
   <div id="inseguro" role="alertdialog" aria-modal="true" aria-labelledby="inseguro-titulo" hidden><div class="trava-cartao"><span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg></span><h2 id="inseguro-titulo">Precisamos de uma conexão segura</h2><p>Para proteger suas conversas, abra o Sigilo por <strong>HTTPS</strong> ou em <strong>localhost</strong>. Neste endereço, a criptografia não está disponível.</p><p class="nota">Peça à administração o endereço seguro da organização.</p></div></div>
+  <dialog id="entrar-grupo" class="dialogo" aria-labelledby="grupo-titulo" hidden>
+    <div class="dialogo-topo"><span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#lock"/></svg></span><button id="btn-fechar-grupo" type="button" class="botao-icone" aria-label="Fechar"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div>
+    <h2 id="grupo-titulo">Entrar na sala geral</h2>
+    <p class="nota">O código é o segredo do grupo. Envie só por um canal em que você confia — e só em HTTPS.</p>
+    <form id="form-grupo">
+      <label for="campo-grupo-dialogo">Código do grupo</label>
+      <input id="campo-grupo-dialogo" type="password" placeholder="Recebido por outro canal" autocomplete="off" spellcheck="false" required>
+      <button type="submit" class="primario">Entrar na sala <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"/></svg></button>
+      <p id="erro-grupo" class="erro-campo" role="alert" hidden></p>
+    </form>
+    <p class="dialogo-rodape"><svg class="icon" aria-hidden="true"><use href="icons.svg#shield"/></svg> O código viaja cifrado (HTTPS). Quem o conhece entra na sala — trate como senha compartilhada.</p>
+  </dialog>
   <dialog id="trava" class="dialogo trava-cartao" aria-labelledby="trava-titulo" aria-describedby="trava-texto" hidden><span class="cartao-icone"><svg class="icon" aria-hidden="true"><use href="icons.svg#fingerprint"/></svg></span><h2 id="trava-titulo"></h2><p id="trava-texto"></p><p class="rotulo">Impressão digital do contato</p><p class="fp grande" id="trava-fp"></p><button id="trava-ok" type="button" class="primario">Os números conferem. Continuar</button><button id="trava-nao" type="button" class="discreto">Agora não</button></dialog>
   <dialog id="lightbox" class="dialogo lightbox" aria-label="Visualização ampliada" hidden>
     <div class="lightbox-topo"><button id="btn-fechar-lightbox" type="button" class="botao-icone" aria-label="Fechar visualização"><svg class="icon" aria-hidden="true"><use href="icons.svg#close"/></svg></button></div>
