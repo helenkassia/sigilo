@@ -10,8 +10,15 @@ não tem como ver: a chave de decifra nunca sai do dispositivo do usuário.
 ## Como rodar
 
 ```bash
-cp .env.example .env   # e troque os dois segredos
+cp .env.example .env   # e troque os segredos
 docker compose up --build
+```
+
+**Desenvolvimento (hot reload):** monta `server/src` e `web` e reinicia o
+Node ao salvar. Frontend: só atualizar a página (F5).
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 Abra `http://localhost:8090`, entre com um identificador e você já está no

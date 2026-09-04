@@ -1,0 +1,11 @@
+# Imagem de desenvolvimento: código vem por volume; tsx watch reinicia sozinho.
+FROM node:22-alpine
+
+WORKDIR /app
+COPY server/package.json server/package-lock.json ./
+RUN npm install
+
+ENV NODE_ENV=development
+ENV CHOKIDAR_USEPOLLING=true
+EXPOSE 8090
+CMD ["npx", "tsx", "watch", "--clear-screen=false", "src/index.ts"]

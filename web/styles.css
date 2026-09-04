@@ -387,6 +387,8 @@ audio { display:block; width:290px; max-width:100%; height:38px; color-scheme:li
 .dialogo > .primario,.dialogo > .discreto { width:100%; margin-top:14px; }
 #form-par { display:flex; flex-direction:column; gap:9px; margin-top:24px; }
 #form-par .primario { margin-top:9px; justify-content:space-between; }
+#form-grupo { display:flex; flex-direction:column; gap:9px; margin-top:24px; }
+#form-grupo .primario { margin-top:14px; justify-content:space-between; }
 .dialogo-rodape { display:flex; gap:9px; padding-top:22px; margin-top:24px; border-top:1px solid var(--linha); font-size:11px; color:var(--fraco); }
 .dialogo-rodape .icon { width:16px; height:16px; }
 .erro-campo { color:var(--alarme); font-size:12px; }

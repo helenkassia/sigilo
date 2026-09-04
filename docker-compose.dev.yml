@@ -1,0 +1,14 @@
+# Desenvolvimento com hot reload.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile.dev
+    volumes:
+      - ./server/src:/app/src
+      - ./web:/app/web
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    command: ["npx", "tsx", "watch", "--clear-screen=false", "src/index.ts"]
